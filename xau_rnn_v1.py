@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[68]:
+# In[1]:
 
 
 # API lib
@@ -30,23 +30,22 @@ print(tf.test.is_built_with_cuda())
 
 # ### Init
 
-# In[5]:
+# In[3]:
 
 
 # APIs
 api_key = ''
-headers = { "Content-Type": "application/json; charset=utf-8",
-            "Accept": "application/json; charset=utf-8",
-            "X-IG-API-KEY": api_key,
-            "X-SECURITY-TOKEN": '',
-            "CST": '',
-            "Version": "3"
-    }
+api_header = {}
+with open('api_header.json') as f:
+    api_header = json.load(f)
+f = open("api_key.txt", "r")
+api_key = f.read()
+api_header["X-IG-API-KEY"] = api_key
+
 # from Crypto.PublicKey import RSA
 # from Crypto.Cipher import PKCS1_v1_5
 
 # login_url = "https://demo-api.ig.com/gateway/deal/"
-
 
 # data=json.dumps({
 # 'encryptedPassword': False,
@@ -108,7 +107,7 @@ usoil_epic = 'CC.D.CL.UNC.IP'
 
 # Functions
 
-# In[35]:
+# In[4]:
 
 
 def start_session():
@@ -129,6 +128,22 @@ def price_extractor(dfx,obj):
     dfx[suffix +'closePrice'] = dfx['closePrice'].apply(lambda x: (eval(x)).get('ask'))
     dfx[suffix +'highPrice'] = dfx['highPrice'].apply(lambda x: (eval(x)).get('ask'))
     dfx[suffix +'lowPrice'] = dfx['lowPrice'].apply(lambda x: (eval(x)).get('ask'))
+
+def ts(new_data, look_back = 100, pred_col = 1):
+    t = new_data.copy()
+    t['id'] = range(1, len(t)+1)
+    t = t.iloc[:-look_back,:]
+    t.set_index('id', inplace= True)
+    pred_value = new_data.copy()
+    pred_value = pred_value.iloc[look_back:, pred_col]
+    pred_value.columns = ['Pred']
+    pred_value = pd.DataFrame(pred_value)
+    pred_value['id'] = range(1,len(pred_value)+1)
+    pred_value.set_index('id', inplace= True)
+    final_df= pd.concat([t,pred_value],axis=1)
+    return final_df
+
+
 
 # create a differenced series
 def difference(dataset, interval=1):
@@ -278,7 +293,7 @@ df_ftse['price_maxmin'] = df_ftse['highPrice'] - df_ftse['lowPrice']
 
 # ### Backup / Restore DataFrames
 
-# In[7]:
+# In[5]:
 
 
 # Backup/Restore Data ------------------------------------
@@ -306,7 +321,7 @@ df_ftse = pd.read_csv('df_ftse'+ '_' + resolution +'.csv', parse_dates=['snapsho
 
 # ### Feature Matrix Prep
 
-# In[8]:
+# In[6]:
 
 
 df_prices = pd.merge(df_xau, df_usd, on='snapshotTime', how = 'left', suffixes=('','_usd')) 
@@ -335,7 +350,7 @@ df_prices.to_csv('gold_feature_price'+ '_' + resolution +'.csv',index=False,head
 # df_prices = pd.read_csv('gold_feature_price'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
 
 
-# In[110]:
+# In[7]:
 
 
 # feature prep
@@ -357,7 +372,7 @@ features_price = features_price[['closePrice','closePrice_usd','closePrice_eur',
 features_price.shape
 
 
-# In[13]:
+# In[29]:
 
 
 # Split test/training
@@ -366,8 +381,8 @@ split_point1 = 7400
 split_point2 = 7600
 features_matrix = features_price.values.astype('float32')
 train_price = features_matrix[:split_point1,]
-test_price = features_matrix[:split_point2,]
-test_price = features_matrix[split_point2:,]
+test_price = features_matrix[split_point1:,]
+# test_price = features_matrix[split_point2:,]
 scaler, train_scaled, test_scaled = scale(train_price,test_price)
 
 print(train_price.shape, test_price.shape)
@@ -375,7 +390,7 @@ print(train_price.shape, test_price.shape)
 
 # ### Linear Regression Coefficients. 1 is bad
 
-# In[14]:
+# In[30]:
 
 
 from sklearn.linear_model import LinearRegression
@@ -386,7 +401,7 @@ r2 = regressor.score(X_train,y_train)
 print('accuracy:',r2,'Adj-R2:',adj_r2(X_train,r2))
 
 
-# In[15]:
+# In[10]:
 
 
 # Create a regression summary where we can compare them with one-another
@@ -398,7 +413,7 @@ reg_summary.sort_values('Weights^2',ascending=False)
 
 # ### RNN Matrix prep
 
-# In[101]:
+# In[31]:
 
 
 # The Scale
@@ -411,7 +426,7 @@ print(train_scaled.shape)
 
 # Matrix Reformation methods
 
-# In[102]:
+# In[32]:
 
 
 # One feature method
@@ -443,7 +458,7 @@ test_scaled = test_scaled.values
 train_scaled.shape
 
 
-# In[103]:
+# In[33]:
 
 
 # Split into Input and output, X & Y
@@ -455,12 +470,11 @@ train_scaled.shape
 n_obs = rnn_time_steps * n_features
 x_train, y_train = train_scaled[:, :n_obs], train_scaled[:, -n_features]
 x_test, y_test = test_scaled[:, :n_obs], test_scaled[:, -n_features]
-print(x_train.shape, len(x_train), y_train.shape)
 
 print(x_train.shape,y_train.shape,x_test.shape,y_test.shape)
 
 
-# In[104]:
+# In[34]:
 
 
 # # Reshaping (batch_size, timesteps, input_dim) # reshape input to be 3D [samples, timesteps, features]
@@ -473,7 +487,7 @@ print(X_train.shape,X_test.shape)
 
 # #### LSTM Model
 
-# In[105]:
+# In[15]:
 
 
 #  RNN Model libs
@@ -506,23 +520,21 @@ regressor.add(Dense(units = 1))
 regressor.compile(  optimizer = 'adam', loss = 'mean_squared_error') #, metrics = ['accuracy'])
 
 # Fitting the RNN to the training set
-regressor.fit(X_train,y_train, epochs = 30, batch_size=48, validation_data=(X_test[:-13,:], y_test[:-13]), verbose=2, shuffle=False)
-regressor.save('reg_lstm4.h5')
+regressor.fit(X_train,y_train, epochs = 30, batch_size=48, validation_data=(X_test, y_test), verbose=2, shuffle=False)
+regressor.save('reg_lstm_v1_3.h5')
 
 
-# In[44]:
+# In[35]:
 
 
 # Restore a Model to aviod test set conflicts
 # regressor.save('reg_lstm4.h5')
-# regressor = load_model('reg_lstm2.h5')
-
-regressor.
+regressor = load_model('reg_lstm_v1_3.h5')
 
 
 # ### Test the Model
 
-# In[106]:
+# In[36]:
 
 
 # Test the RNN
@@ -559,15 +571,6 @@ inv_y = concatenate((y_test, X_test[:, -(n_features-1):]), axis=1)
 inv_y = scaler.inverse_transform(inv_y)
 inv_y = inv_y[:,0]
 
-# inv_yhat = concatenate((yhat, test_X[:, -7:]), axis=1)
-# inv_yhat = scaler.inverse_transform(inv_yhat)
-# inv_yhat = inv_yhat[:,0]
-# # invert scaling for actual
-# test_y = test_y.reshape((len(test_y), 1))
-# inv_y = concatenate((test_y, test_X[:, -7:]), axis=1)
-# inv_y = scaler.inverse_transform(inv_y)
-# inv_y = inv_y[:,0]
-
 
 # predicted_gold_price = invert_scale(scaler, X_test, y_pred)
 # predicted_gold_price = scaler.inverse_transform(predicted_gold_price)
@@ -575,23 +578,23 @@ inv_y = inv_y[:,0]
 # predicted_gold_price = predicted_gold_price.reshape(-1,1)
 
 
-# In[107]:
+# In[37]:
 
 
 # calculate RMSE
 from sklearn.metrics import mean_squared_error
-rmse = math.sqrt(mean_squared_error(inv_y, inv_yhat))
+rmse = sqrt(mean_squared_error(inv_y, inv_yhat))
 
 print(inv_y.shape, inv_yhat.shape)
 print('Test RMSE: %.3f' % rmse)
 
 
 
-# In[108]:
+# In[39]:
 
 
 # Visualization the results
-plot_size = -13 # Max 165
+plot_size = None # Max 165
 plt.plot(inv_y[plot_size:], color= 'red', label = 'Real Gold Price')
 plt.plot(inv_yhat[plot_size:], color= 'blue', label = 'Predicted Gold Price')
 plt.title('Gold Price Prediction')
@@ -602,13 +605,13 @@ plt.legend()
 plt.show()
 
 
-# In[109]:
+# In[ ]:
 
 
 y_pred
 
 
-# In[72]:
+# In[40]:
 
 
 X_test.shape, y_pred.shape
