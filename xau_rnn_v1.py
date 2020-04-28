@@ -16,6 +16,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
 
 
 # In[2]:
@@ -209,211 +211,48 @@ def adj_r2(x,r2):
     return adjusted_r2
 
 
-# ### Data Import from API. * [Do only when needed!] *
-
-# In[ ]:
+# In[31]:
 
 
-# Data Import
-xau = price_history(xau_epic,resolution,date1,date2)
-xau_list = json.loads(xau.text)['prices']
-usd = price_history(usd_epic,resolution,date1,date2)
-usd_list = json.loads(usd.text)['prices']
-us500 = price_history(us500_epic,resolution,date1,date2)
-us500_list = json.loads(us500.text)['prices']
-us100 = price_history(us100_epic,resolution,date1,date2)
-us100_list = json.loads(us100.text)['prices']
-eur = price_history(eur_epic,resolution,date1,date2)
-eur_list = json.loads(eur.text)['prices']
-ftse = price_history(ftse_epic,resolution,date1,date2)
-ftse_list = json.loads(ftse.text)['prices']
-usoil = price_history(usoil_epic,resolution,date1,date2)
-usoil_list = json.loads(usoil.text)['prices']
-# eurchn = price_history(eurchn_epic,resolution,date1,date2)
-# eurchn_list = json.loads(eurchn.text)['prices']
-# usdchn = price_history(usdchn_epic,resolution,date1,date2)
-# usdchn_list = json.loads(usdchn.text)['prices']
-# DataFrame convert
-df_xau = pd.DataFrame(xau_list)
-df_usd = pd.DataFrame(usd_list)
-df_us500 = pd.DataFrame(us500_list)
-df_us100 = pd.DataFrame(us100_list)
-df_eur = pd.DataFrame(eur_list)
-df_ftse = pd.DataFrame(ftse_list)
-df_usoil = pd.DataFrame(usoil_list)
-# df_eurchn = pd.DataFrame(eurchn_list)
-# df_usdchn = pd.DataFrame(usdchn_list)
+archive_path = 'data/'
+df_prices = pd.read_csv('gold_feature_price'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
 
 
-# Give it a name
-# df_xau.name = 'xau'
-# df_eur.name = 'usd'
-# df_us500.name = 'us500'
-# df_us100.name = 'us100'
-# df_eur.name = 'eur'
-tables = ['xau','usd','us500','us100','usoil','eur','ftse','eurchn','usdchn']
-
-# 	Dict extract openPrice	{'bid': 1275.64, 'ask': 1275.94, 'lastTraded': None}
-price_extractor(df_xau,'xau')
-price_extractor(df_usd, 'usd')
-price_extractor(df_us500, 'us500')
-price_extractor(df_us100, 'us100')
-price_extractor(df_usoil, 'usoil')
-price_extractor(df_eur, 'eur')
-price_extractor(df_ftse, 'ftse')
-# price_extractor(df_eurchn, 'eurchn')
-# price_extractor(df_usdchn, 'usdchn')
+# In[46]:
 
 
-df_xau['price_change'] = df_xau['openPrice'] - df_xau['closePrice']
-df_xau['price_maxmin'] = df_xau['highPrice'] - df_xau['lowPrice']
-df_usd['price_change'] = df_usd['openPrice'] - df_usd['closePrice']
-df_usd['price_maxmin'] = df_usd['highPrice'] - df_usd['lowPrice']
-df_us500['price_change'] = df_us500['openPrice'] - df_us500['closePrice']
-df_us500['price_maxmin'] = df_us500['highPrice'] - df_us500['lowPrice']
-df_us100['price_change'] = df_us100['openPrice'] - df_us100['closePrice']
-df_us100['price_maxmin'] = df_us100['highPrice'] - df_us100['lowPrice']
-df_usoil['price_change'] = df_usoil['openPrice'] - df_usoil['closePrice']
-df_usoil['price_maxmin'] = df_usoil['highPrice'] - df_usoil['lowPrice']
-df_eur['price_change'] = df_eur['openPrice'] - df_eur['closePrice']
-df_eur['price_maxmin'] = df_eur['highPrice'] - df_eur['lowPrice']
-df_ftse['price_change'] = df_ftse['openPrice'] - df_ftse['closePrice']
-df_ftse['price_maxmin'] = df_ftse['highPrice'] - df_ftse['lowPrice']
-# df_eurchn['price_change'] = df_eurchn['openPrice'] - df_eurchn['closePrice']
-# df_eurchn['price_maxmin'] = df_eurchn['highPrice'] - df_eurchn['lowPrice']
-# df_usdchn['price_change'] = df_usdchn['openPrice'] - df_usdchn['closePrice']
-# df_usdchn['price_maxmin'] = df_usdchn['highPrice'] - df_usdchn['lowPrice']
-
-
-# zscore_fun_improved = lambda x: (x - x.rolling(window=200, min_periods=20).mean())\
-# / x.rolling(window=200, min_periods=20).std()
-# features['f10'] =prices.groupby(level='symbol').close.apply(zscore_fun_improved)
-# features.f10.unstack().plot.kde(title='Z-Scores (accurate)')
-
-
-# ### Backup / Restore DataFrames
-
-# In[5]:
-
-
-# Backup/Restore Data ------------------------------------
-
-# df_xau.to_csv('df_xau'+ '_' + resolution +'.csv',index=False,header = True)
-# df_usd.to_csv('df_usd'+ '_' + resolution +'.csv',index=False,header = True)
-# df_us500.to_csv('df_us500'+ '_' + resolution +'.csv',index=False,header = True)
-# df_us100.to_csv('df_us100'+ '_' + resolution +'.csv',index=False,header = True)
-# df_usoil.to_csv('df_usoil'+ '_' + resolution +'.csv',index=False,header = True)
-# df_eur.to_csv('df_eur'+ '_' + resolution +'.csv',index=False,header = True)
-# df_ftse.to_csv('df_ftse'+ '_' + resolution +'.csv',index=False,header = True)
-# df_eurchn.to_csv('df_eurchn.csv',index=False,header = True)
-# df_usdchn.to_csv('df_usdchn.csv',index=False,header = True)
-
-df_xau = pd.read_csv('df_xau'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-df_usd = pd.read_csv('df_usd'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-df_us500 = pd.read_csv('df_us500'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-df_us100 = pd.read_csv('df_us100'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-df_usoil = pd.read_csv('df_usoil'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-df_eur = pd.read_csv('df_eur'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-df_ftse = pd.read_csv('df_ftse'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-# df_eurchn = pd.read_csv('df_eurchn'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-# df_usdchn = pd.read_csv('df_usdchn'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-
-
-# ### Feature Matrix Prep
-
-# In[6]:
-
-
-df_prices = pd.merge(df_xau, df_usd, on='snapshotTime', how = 'left', suffixes=('','_usd')) 
-df_prices = pd.merge(df_prices, df_us500, on='snapshotTime', how = 'left', suffixes=('','_us500'))
-df_prices = pd.merge(df_prices, df_us100, on='snapshotTime', how = 'left', suffixes=('','_us100'))
-df_prices = pd.merge(df_prices, df_usoil, on='snapshotTime', how = 'left', suffixes=('','_usoil'))
-df_prices = pd.merge(df_prices, df_eur, on='snapshotTime', how = 'left', suffixes=('','_eur'))
-df_prices = pd.merge(df_prices, df_ftse, on='snapshotTime', how = 'left', suffixes=('','_ftse'))
-# df_prices = pd.merge(df_prices, df_eurchn, on='snapshotTime', how = 'left', suffixes=('','_eurchn'))
-# df_prices = pd.merge(df_prices, df_usdchn, on='snapshotTime', how = 'left', suffixes=('','_usdchn'))
-
-df_prices = df_prices[[
-                    'snapshotTime','openPrice','closePrice','price_change','price_maxmin','lastTradedVolume',
-                    'openPrice_usd','closePrice_usd','price_change_usd','price_maxmin_usd','lastTradedVolume_usd',
-                    'openPrice_us500','closePrice_us500','price_change_us500','price_maxmin_us500','lastTradedVolume_us500',
-                    'openPrice_us100','closePrice_us100','price_change_us100','price_maxmin_us100','lastTradedVolume_us100',
-                    'openPrice_usoil','closePrice_usoil','price_change_usoil','price_maxmin_usoil','lastTradedVolume_usoil',
-                    'openPrice_eur','closePrice_eur','price_change_eur','price_maxmin_eur','lastTradedVolume_eur',
-                    'openPrice_ftse','closePrice_ftse','price_change_ftse','price_maxmin_usd','lastTradedVolume_ftse',
-                    # 'openPrice_eurchn','closePrice_eurchn','price_change_eurchn','price_maxmin_eurchn','lastTradedVolume_eurchn',
-                    # 'openPrice_usdchn','closePrice_usdchn','price_change_usdchn','price_maxmin_usdchn','lastTradedVolume_usdchn',
-                    ]]
-
-# df_prices.reset_index(inplace = True)
-df_prices.to_csv('gold_feature_price'+ '_' + resolution +'.csv',index=False,header = True)
-# df_prices = pd.read_csv('gold_feature_price'+ '_' + resolution +'.csv', parse_dates=['snapshotTime']) # Data Restore
-
-
-# In[7]:
-
-
-# feature prep
+# Feature Selection
 features_price = df_prices.copy()
 
-# NaNs
-# features_price = features_price.iloc[100:, :]
-features_price.dropna(axis = 0, inplace = True)
-features_price = features_price.sort_values('snapshotTime')
-features_price.reset_index(inplace = True)
-
-# 
-
-features_price = features_price[['closePrice','closePrice_usd','closePrice_eur','closePrice_usoil']] #,'closePrice_us500','closePrice_ftse','closePrice_ftse','closePrice_eurchn']
+datetime_price = features_price[['snapshotTime']]
+features_price = features_price[['closePrice','closePrice_usd','closePrice_eur','closePrice_usoil','closePrice_us500','closePrice_us100','closePrice_ftse']] #,'closePrice_eurchn']
 # features_price = features_price[['price_change','price_change_usd','price_change_us500','price_change_usoil', 'price_change_eur']] 
 
-# features_price.plot(subplots=True)
-# plt.show()
-features_price.shape
+features_price.plot(subplots=True)
+plt.show()
 
 
-# In[29]:
+# In[47]:
 
 
 # Split test/training
-counter = 7613
-split_point1 = 7400
+counter = features_price.shape[0]
+prediction_period = 48*3
+split_point1 = counter - prediction_period
 split_point2 = 7600
 features_matrix = features_price.values.astype('float32')
 train_price = features_matrix[:split_point1,]
 test_price = features_matrix[split_point1:,]
+datetime_price = datetime_price.iloc[split_point1:,]
 # test_price = features_matrix[split_point2:,]
 scaler, train_scaled, test_scaled = scale(train_price,test_price)
 
-print(train_price.shape, test_price.shape)
-
-
-# ### Linear Regression Coefficients. 1 is bad
-
-# In[30]:
-
-
-from sklearn.linear_model import LinearRegression
-regressor = LinearRegression()
-X_train, y_train = train_scaled[:,1:], train_scaled[:,0:1]
-regressor.fit(X_train, y_train)
-r2 = regressor.score(X_train,y_train)
-print('accuracy:',r2,'Adj-R2:',adj_r2(X_train,r2))
-
-
-# In[10]:
-
-
-# Create a regression summary where we can compare them with one-another
-reg_summary = pd.DataFrame(features_price.columns.values[1:], columns=['Features'])
-reg_summary['Coefs'] = regressor.coef_[0]
-reg_summary['Weights^2'] = np.exp(np.abs(regressor.coef_[0]))
-reg_summary.sort_values('Weights^2',ascending=False)
+print(train_price.shape, test_price.shape, datetime_price.shape)
 
 
 # ### RNN Matrix prep
 
-# In[31]:
+# In[48]:
 
 
 # The Scale
@@ -426,7 +265,7 @@ print(train_scaled.shape)
 
 # Matrix Reformation methods
 
-# In[32]:
+# In[49]:
 
 
 # One feature method
@@ -439,34 +278,20 @@ print(train_scaled.shape)
 #     y_train.append(gold_price_scaled[i, 0])
 # X_train, y_train = np.array(X_train), np.array(y_train)
 
-# Blog method
-# train_scaled = pd.DataFrame(train_scaled)
-# train_scaled = ts(train_scaled,rnn_depth,pred_col=-1)
-# train_scaled = train_scaled.values
-
-# series_to_supervised
 # series_to_supervised(scaled, n_hours, 1)
 train_scaled = series_to_supervised(train_scaled,n_in=rnn_time_steps,n_out=1)
 train_scaled = train_scaled.values
-
 test_scaled = series_to_supervised(test_scaled,n_in=rnn_time_steps,n_out=1)
 test_scaled = test_scaled.values
 
-# Keras 
-# from keras.preprocessing import TimeseriesGenerator
-# seq = TimeseriesGenerator(data, targets, length, sampling_rate=1, stride=1, start_index=0, end_index=None, shuffle=False, reverse=False, batch_size=128)
 train_scaled.shape
 
 
-# In[33]:
+# In[50]:
 
 
 # Split into Input and output, X & Y
-# One feature method
-# x_train, y_train = train_scaled[:,1:], train_scaled[:,0:1]
-# x_test, y_test = test_scaled[:,1:], test_scaled[:,0:1]
 
-# split into input and outputs
 n_obs = rnn_time_steps * n_features
 x_train, y_train = train_scaled[:, :n_obs], train_scaled[:, -n_features]
 x_test, y_test = test_scaled[:, :n_obs], test_scaled[:, -n_features]
@@ -474,7 +299,7 @@ x_test, y_test = test_scaled[:, :n_obs], test_scaled[:, -n_features]
 print(x_train.shape,y_train.shape,x_test.shape,y_test.shape)
 
 
-# In[34]:
+# In[51]:
 
 
 # # Reshaping (batch_size, timesteps, input_dim) # reshape input to be 3D [samples, timesteps, features]
@@ -487,7 +312,7 @@ print(X_train.shape,X_test.shape)
 
 # #### LSTM Model
 
-# In[15]:
+# In[ ]:
 
 
 #  RNN Model libs
@@ -510,7 +335,7 @@ regressor.add(Dropout(0.2))
 # regressor.add(Dropout(0.2))
 
 # 4th LSTM Layer+ dropout regularisation
-regressor.add(LSTM(units = 20))
+regressor.add(LSTM(units = 10))
 regressor.add(Dropout(0.2))
 
 # Output layer
@@ -521,7 +346,7 @@ regressor.compile(  optimizer = 'adam', loss = 'mean_squared_error') #, metrics 
 
 # Fitting the RNN to the training set
 regressor.fit(X_train,y_train, epochs = 30, batch_size=48, validation_data=(X_test, y_test), verbose=2, shuffle=False)
-regressor.save('reg_lstm_v1_3.h5')
+regressor.save('reg_lstm_v1_f7_1.h5')
 
 
 # In[35]:
@@ -529,12 +354,12 @@ regressor.save('reg_lstm_v1_3.h5')
 
 # Restore a Model to aviod test set conflicts
 # regressor.save('reg_lstm4.h5')
-regressor = load_model('reg_lstm_v1_3.h5')
+regressor = load_model('reg_lstm_v1_f7_1.h5')
 
 
 # ### Test the Model
 
-# In[36]:
+# In[19]:
 
 
 # Test the RNN
@@ -578,7 +403,7 @@ inv_y = inv_y[:,0]
 # predicted_gold_price = predicted_gold_price.reshape(-1,1)
 
 
-# In[37]:
+# In[20]:
 
 
 # calculate RMSE
@@ -590,18 +415,27 @@ print('Test RMSE: %.3f' % rmse)
 
 
 
-# In[39]:
+# In[106]:
 
 
 # Visualization the results
-plot_size = None # Max 165
-plt.plot(inv_y[plot_size:], color= 'red', label = 'Real Gold Price')
-plt.plot(inv_yhat[plot_size:], color= 'blue', label = 'Predicted Gold Price')
-plt.title('Gold Price Prediction')
-plt.xlabel('Time')
-plt.ylabel('Price')
-plt.legend()
-# plt.savefig('gold_multi_feature_test.png' , dpi=150)
+plot_size1 = None # Max 165
+plot_size2 = None
+# ax = plt.axes()
+fig, ax = plt.subplots(figsize=(15,6))
+# ax.plot(t, s)
+
+# fig = plt.figure(figsize=(15,6))
+ax.plot(inv_y[plot_size1:plot_size2],datetime_price, color= 'red', label = 'Real Gold Price')
+ax.plot(inv_yhat[plot_size1:plot_size2], color= 'blue', label = 'Predicted Gold Price')
+ax.set_title('Gold Price Prediction')
+ax.set_xlabel('Time')
+ax.set_ylabel('Price')
+ax.legend()
+ax.xaxis.set_major_locator(MultipleLocator(12))
+ax.xaxis.set_minor_locator(AutoMinorLocator())
+ax.grid(which='both');
+plt.savefig('gold_price_prediction_.png' , dpi=150)
 plt.show()
 
 
